@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interactive Turntable</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="intro">
+      <img src="images/turntable_closed.png" class="turntable" id="turntable" />
+    </div>
+
+    <div class="inside">
+      <div class="lp-container">
+        <div class="lp" id="lp"></div>
+        <div class="needle" id="needle"></div>
+        <div class="effect" id="effect"></div>
+      </div>
+      <div>
+        <button class="track-btn" data-track="leisure">여유</button>
+        <button class="track-btn" data-track="calm">고요</button>
+        <button class="track-btn" data-track="memory">추억</button>
+        <button class="track-btn" data-track="nature">자연</button>
+      </div>
+      <button id="exit-btn">Exit</button>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
