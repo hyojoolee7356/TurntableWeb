@@ -1,83 +1,506 @@
+/* reset */
 * {
   box-sizing: border-box;
 }
 html,
 body {
   height: 100%;
-  margin: 0;
-  padding: 0;
 }
 body {
-  background: #000000;
-  color: white;
-  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #000;
+  color: #eee;
+  font-family: Arial, system-ui;
   overflow: hidden;
 }
 
-/* ================= Intro ================= */
+/* ===== Intro ===== */
 .intro {
   position: fixed;
   inset: 0;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  /* 중앙에서 퍼지는 저채도 브라운 → 블랙 */
   background: radial-gradient(
-    circle at center,
-    #332720 0%,
-    #1c1613 40%,
+    circle at 50% 50%,
+    #37261b 0%,
+    #30251c 28%,
+    #181412 62%,
     #000 100%
   );
-  transition: opacity 1.5s ease;
+  transition: opacity 1.2s ease;
 }
-
-.turntable-wrap {
-  width: min(45vw, 500px);
-  aspect-ratio: 1 / 1;
-  position: relative;
-  margin-top: 100px;
-  cursor: pointer;
+/* 검정으로 서서히 덮는 오버레이 (그라데이션과 자연스럽게 이어지게) */
+.intro::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  transition: opacity 1.6s ease;
+}
+.intro.blackout::after {
+  opacity: 1;
 }
 
 .turntable-image {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  width: min(600px, 85vw); /* 예전 크기와 동일 */
+  height: auto;
+  margin-top: 100px;
   object-fit: contain;
-  transition: opacity 1s ease, transform 1.2s ease;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: opacity 1.4s ease, transform 1.4s ease;
 }
-
-/* 닫힌 이미지 기본 보임 */
 .turntable-closed {
   opacity: 1;
   transform: scale(1);
+}
+
+.turntable-open {
+  opacity: 0;
+  transform: scale(1.02);
   margin-top: 40px;
 }
 
-/* 열린 이미지는 처음 숨김 */
-.turntable-open {
-  opacity: 0;
-  transform: scale(1.05);
-  margin-top: -40px;
-}
-
-/* 호버 효과 */
-.turntable-wrap:hover .turntable-closed {
-  transform: scale(1.03);
-}
-
-/* 전환 중 단계 */
+/* 전환 단계 */
 .intro.fade-closed .turntable-closed {
   opacity: 0;
-  transform: scale(1.1);
+  transform: scale(0.985);
 }
-
+/* 열림은 살짝 늦게 시작해서 겹침 느낌 최소화(0.15s delay) */
 .intro.show-open .turntable-open {
   opacity: 1;
   transform: scale(1);
+  transition-delay: 0.45s;
 }
 
-/* 암전 */
-.intro.blackout {
+/* ===== Inside (암흑 + exit만) ===== */
+.inside {
+  position: fixed;
+  inset: 0;
+  display: none;
   opacity: 0;
+  pointer-events: none;
+  background: #000; /* 바깥 검은 프레임 */
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.9s ease; /* 스르륵 */
+  z-index: 1;
+}
+
+.inside.show {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* exit 버튼 좌상단 */
+#exit-btn {
+  position: fixed;
+  left: 20px;
+  top: 20px;
+  z-index: 60;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f2f2f2;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  backdrop-filter: blur(2px);
+}
+#exit-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* ===== INSIDE 레이아웃 ===== */
+:root {
+  --needle-angle: 18deg;
+} /* 트랙별 각도(JS가 변경) */
+
+.deck {
+  position: relative;
+  width: min(1800px, 92vw);
+  aspect-ratio: 16/9;
+  border-radius: 40px;
+  /* 일러처럼 검은 프레임 안쪽에 큰 박스 */
+  background: #222120;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55), inset 0 0 0 14px #111;
+  overflow: hidden;
+}
+
+/* 안쪽 패널(둥근 모서리, 트랙별 배경 이미지가 들어감) */
+.panel {
+  position: absolute;
+  inset: 20px; /* 검은 프레임 안 여백 */
+  border-radius: 22px;
+  background: #292929 center/cover no-repeat;
+}
+
+/* LP – 좌측 */
+.lp {
+  position: absolute;
+  left: 7%;
+  top: 5%;
+  transform: translateY(-50%);
+  width: 53%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* 바늘 – 우측, 축 고정 + 각도만 회전 */
+.needle {
+  position: absolute;
+  right: 21%;
+  top: 10%;
+  width: 30%;
+  height: auto;
+  /* 이 좌표가 바늘 PNG의 ‘위 동그란 축 중심’을 정확히 가리키도록 필요시 1~2%만 조정 */
+  transform-origin: 70% 18%;
+  transform: rotate(var(--needle-angle));
+  transition: transform 0.55s ease; /* 부드러운 이동(애니 효과 아님) */
+}
+
+/* 트랙 버튼 – 우하단, 반투명 60% */
+.track-controls {
+  position: absolute;
+  right: 7.5%;
+  bottom: 8.5%;
+  display: flex;
+  gap: 18px;
+}
+.track-btn {
+  width: 52px;
+  height: 32px;
+  border-radius: 16px;
+  border: none;
+  background: #cfd3d8;
+  opacity: 0.6; /* 요구사항 */
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.25),
+    0 6px 16px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+.track-btn.active {
+  outline: 3px solid rgba(255, 255, 255, 0.35);
+}
+
+/* ===== CLICK이 잘 먹도록 레이어/포인터 정리 ===== */
+.panel {
+  position: absolute;
+  inset: 20px;
+  border-radius: 22px;
+  background: #444 center/cover no-repeat;
+  z-index: 1;
+}
+
+.lp {
+  z-index: 2;
+}
+.needle {
+  z-index: 2;
+}
+
+.track-controls {
+  z-index: 3;
+}
+#exit-btn {
+  position: fixed;
+  left: 20px;
+  top: 20px;
+  z-index: 60;
+}
+
+/* 트랙 버튼은 반드시 클릭 가능하도록 */
+.track-controls,
+.track-btn {
+  pointer-events: auto !important;
+}
+
+/* LP/바늘/패널 전환 스르륵 */
+.lp {
+  transition: opacity 0.45s ease;
+}
+.needle {
+  transition: transform 0.55s ease;
+}
+
+/* 패널 배경도 스르륵: 가상요소로 페이드 */
+.panel {
+  position: absolute;
+  inset: 20px;
+  border-radius: 22px;
+  overflow: hidden;
+}
+.panel::before,
+.panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  background-size: cover;
+  background-position: center;
+  transition: opacity 0.45s ease;
+}
+.panel::before {
+  opacity: 1;
+}
+.panel::after {
+  opacity: 0;
+}
+.panel.panel-fading::before {
+  opacity: 0;
+}
+.panel.panel-fading::after {
+  opacity: 1;
+}
+
+/* inside에서 버튼/exit가 항상 최상단에서 클릭을 받게 */
+.inside .panel::before,
+.inside .panel::after {
+  pointer-events: none !important;
+}
+
+.inside .track-controls {
+  z-index: 1000 !important;
+}
+.inside .track-btn {
+  pointer-events: auto !important;
+  cursor: pointer;
+}
+.inside #exit-btn {
+  z-index: 1001 !important;
+  pointer-events: auto !important;
+}
+
+/* ===== 배경(panel) 효과 전용 ㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇ===== */
+.inside .panel {
+  overflow: hidden;
+} /* 패널 밖으로 효과가 새지 않게 */
+.inside .panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none; /* 클릭 방해 금지 */
+}
+
+/* 여유: 살짝 울렁 */
+@keyframes wobble {
+  0%,
+  100% {
+    transform: none;
+    filter: none;
+  }
+  25% {
+    transform: translate3d(0.2%, -0.2%, 0) scale(1.01) rotate(0.05deg);
+  }
+  50% {
+    transform: translate3d(-0.2%, 0.2%, 0) scale(1.015) rotate(-0.05deg);
+  }
+  75% {
+    transform: translate3d(0.1%, 0, 0) scale(1.01);
+  }
+}
+.inside .panel.fx-leisure {
+  animation: wobble 6s ease-in-out infinite;
+}
+
+/* 고요: LP 중심에서 퍼지는 파동 */
+@keyframes calmRipple {
+  0% {
+    background-size: 0% 0%;
+    opacity: 0.25;
+  }
+  70% {
+    background-size: 180% 180%;
+    opacity: 0.05;
+  }
+  100% {
+    background-size: 200% 200%;
+    opacity: 0;
+  }
+}
+.inside .panel.fx-calm::after {
+  background: radial-gradient(
+    circle at var(--lp-x, 30%) var(--lp-y, 50%),
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 255, 255, 0.12) 12%,
+    rgba(255, 255, 255, 0) 32%
+  );
+  mix-blend-mode: screen;
+  animation: calmRipple 4.8s ease-out infinite;
+}
+
+/* 추억: TV 노이즈 */
+@keyframes tvNoiseMove {
+  0% {
+    background-position: 0 0;
+    filter: brightness(0.98) contrast(1.02);
+  }
+  50% {
+    background-position: 100% 50%;
+    filter: brightness(1.02) contrast(1.05);
+  }
+  100% {
+    background-position: 0 100%;
+    filter: brightness(0.99) contrast(1.02);
+  }
+}
+.inside .panel.fx-memory::after {
+  background-image: url('images/noise.png'); /* 작은 흑백 노이즈 이미지 하나 추가해줘 */
+  background-size: 300px 300px;
+  opacity: 0.12;
+  mix-blend-mode: overlay;
+  animation: tvNoiseMove 1s steps(10) infinite;
+}
+
+/* 자연: 바람 흔들림 + 부드러운 스트릭 */
+@keyframes swayBG {
+  0%,
+  100% {
+    transform: none;
+  }
+  50% {
+    transform: translateX(0.6%) skewX(0.3deg);
+  }
+}
+@keyframes breezeOverlay {
+  0% {
+    background-position: -20% 0;
+    opacity: 0.08;
+  }
+  50% {
+    background-position: 120% 0;
+    opacity: 0.14;
+  }
+  100% {
+    background-position: -20% 0;
+    opacity: 0.08;
+  }
+}
+.inside .panel.fx-nature {
+  animation: swayBG 5.5s ease-in-out infinite;
+}
+.inside .panel.fx-nature::after {
+  background: linear-gradient(
+    100deg,
+    rgba(90, 140, 70, 0) 0%,
+    rgba(90, 140, 70, 0.18) 30%,
+    rgba(90, 140, 70, 0.22) 50%,
+    rgba(90, 140, 70, 0.18) 70%,
+    rgba(90, 140, 70, 0) 100%
+  );
+  mix-blend-mode: soft-light;
+  background-size: 120% 100%;
+  animation: breezeOverlay 4.5s ease-in-out infinite;
+}
+/* LP 회전 */
+@keyframes lp-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 이미지 중심을 회전축으로 */
+#lp {
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+/* 이 클래스가 붙어 있을 때만 회전 */
+.lp-spin {
+  animation: lp-spin 24s linear infinite; /* 속도: 24초/한바퀴 (원하면 18~36s로 조절) */
+}
+
+/* 접근성: 사용자가 '감소된 모션' 설정이면 회전 중지 */
+@media (prefers-reduced-motion: reduce) {
+  .lp-spin {
+    animation: none;
+  }
+}
+/* 화면 전환용 페이드 */
+.fade-out {
+  animation: fadeOut 0.6s ease forwards;
+}
+.fade-in {
+  animation: fadeIn 0.6s ease forwards;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 기본 LP 강제 위치 고정 */
+#lp {
+  position: absolute;
+  width: 53%; /* 트랙들과 동일한 비율 유지 */
+  left: 8%; /* 패널 기준 왼쪽 정렬 */
+  top: 4%; /* 위쪽 위치 맞추기 */
+  transform: none;
+}
+
+/* ===== 트랙 텍스트 (PNG) ===== */
+.track-text-img {
+  position: absolute;
+  right: 12%;
+  top: 42%;
+  width: 260px; /* 필요시 조정 */
+  opacity: 0; /* 처음엔 숨김 */
+  pointer-events: none;
+  z-index: 20;
+  transition: opacity 0.7s ease; /* 서서히 */
+}
+
+.track-text-img.show {
+  opacity: 0.85; /* 살짝 반투명 */
+}
+
+/* 반드시 존재해야 함 추가적으로 넣는 거야 삭제하고 시픙ㅁ 삭제 */
+#inside {
+  position: relative;
+}
+
+/* 텍스트 이미지 레이어 */
+.track-text-img {
+  position: absolute;
+  right: 12%;
+  top: 40%;
+  width: 300px;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  pointer-events: none;
+  z-index: 50; /* LP/바늘보다 위 */
+}
+.track-text-img.show {
+  opacity: 1;
+}
+
+/* 만약 LP/바늘이 더 위에 있으면 낮춰주기 */
+#lp {
+  position: absolute;
+  z-index: 20;
+}
+#needle {
+  position: absolute;
+  z-index: 30;
 }

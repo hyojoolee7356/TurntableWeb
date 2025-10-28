@@ -4,77 +4,81 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Interactive Turntable</title>
-    <link rel="stylesheet" href="style.css" />
-    <!-- 이미지 프리로드(깜빡임 방지) -->
     <link rel="preload" as="image" href="images/turntable_closed.png" />
     <link rel="preload" as="image" href="images/turntable_open.png" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <!-- 인트로 (첫 화면) -->
-    <div class="intro">
-      <div
-        class="turntable-wrap"
-        id="turntableWrap"
-        aria-label="Turntable"
-        tabindex="0"
-      >
-        <!-- 닫힌 턴테이블 (기본 보임) -->
-        <img
-          src="images/turntable_closed.png"
-          class="turntable-image turntable-closed"
-          id="turntableClosed"
-          alt="closed turntable"
-        />
-
-        <!-- 열린 턴테이블 (처음엔 숨김) -->
-        <img
-          src="images/turntable_open.png"
-          class="turntable-image turntable-open"
-          id="turntableOpen"
-          alt="open turntable"
-        />
-      </div>
+    <!-- Intro -->
+    <div class="intro" aria-label="intro">
+      <img
+        id="turntablec"
+        class="turntable-image turntable-closed"
+        src="images/turntable_closed.png"
+        alt="closed turntable"
+        draggable="false"
+      />
+      <img
+        id="turntablep"
+        class="turntable-image turntable-open"
+        src="images/turntable_open.png"
+        alt="open turntable"
+        draggable="false"
+      />
     </div>
 
-    <!-- ====== INSIDE (메인 화면) ====== -->
-    <div class="inside" aria-label="inside">
-      <div class="deck">
-        <!-- 트랙별로 바뀌는 안쪽 패널 배경 -->
-        <div id="panel" class="panel"></div>
+    <!-- ===== INSIDE (메인 화면) ===== -->
+    <div id="inside" class="inside" aria-label="inside">
+      <div class="stage">
+        <div class="deck">
+          <div id="panel" class="panel"></div>
+        </div>
 
-        <!-- LP(트랙별 교체) -->
-        <img id="lp" class="lp" src="images/lp_default.png" alt="lp" />
-
-        <!-- 바늘(톤암) — 위 원형 축은 고정, 끝부분만 회전 이동 -->
+        <img id="lp" class="lp" src="images/lp_default.png" alt="LP" />
         <img id="needle" class="needle" src="images/needle.png" alt="needle" />
+        <img
+          id="track-text-img"
+          class="track-text-img"
+          src="images/text/text_default.png"
+          alt="text"
+        />
 
-        <!-- 트랙 버튼 (우하단, 반투명) -->
         <div class="track-controls" role="group" aria-label="tracks">
           <button
             class="track-btn"
-            data-track="leisure"
             aria-label="여유"
+            onclick="setTrack('leisure')"
           ></button>
           <button
             class="track-btn"
-            data-track="calm"
             aria-label="고요"
+            onclick="setTrack('calm')"
           ></button>
           <button
             class="track-btn"
-            data-track="memory"
             aria-label="추억"
+            onclick="setTrack('memory')"
           ></button>
           <button
             class="track-btn"
-            data-track="nature"
             aria-label="자연"
+            onclick="setTrack('nature')"
           ></button>
         </div>
       </div>
-
-      <!-- 오디오는 나중에 연결 (지금은 비활성) -->
-      <audio id="player" preload="none"></audio>
+      <button
+        id="exit-btn"
+        class="exit-btn"
+        aria-label="Back to intro"
+        onclick="exitInside()"
+      >
+        exit
+      </button>
     </div>
+    <script src="script.js" defer></script>
   </body>
 </html>
