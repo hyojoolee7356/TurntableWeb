@@ -40,12 +40,7 @@
 
         <img id="lp" class="lp" src="images/lp_default.png" alt="LP" />
         <img id="needle" class="needle" src="images/needle.png" alt="needle" />
-        <img
-          id="track-text-img"
-          class="track-text-img"
-          src="images/text/text_default.png"
-          alt="text"
-        />
+        <img id="track-text-img" class="track-text-img" src="" alt="text" />
 
         <div class="track-controls" role="group" aria-label="tracks">
           <button
@@ -80,5 +75,148 @@
       </button>
     </div>
     <script src="script.js" defer></script>
+
+    <script>
+      /* ===== 응급 패치: 기본 화면 텍스트 숨김 + 트랙 클릭 시 텍스트만 교체(스르륵) ===== */
+      document.addEventListener('DOMContentLoaded', () => {
+        const img = document.getElementById('track-text-img');
+        if (img) img.classList.remove('show'); // 기본 화면에서는 텍스트 숨김 (style.css: .track-text-img는 .show 있어야 보임)
+
+        // 트랙 키 -> 텍스트 PNG 경로 (네가 쓰는 파일명 그대로 가정)
+        const TEXT_SRC = {
+          leisure: 'images/text/text_leisure.png',
+          calm: 'images/text/text_calm.png',
+          memory: 'images/text/text_memory.png',
+          nature: 'images/text/text_nature.png',
+        };
+
+        // 원래 setTrack이 있으면 랩핑, 없으면 클릭 이벤트로만 처리
+        const orig =
+          typeof window.setTrack === 'function'
+            ? window.setTrack.bind(window)
+            : null;
+
+        function swapText(key) {
+          const next = TEXT_SRC[key];
+          if (!img || !next) return;
+          img.classList.remove('show');
+          requestAnimationFrame(() => {
+            img.src = next;
+            requestAnimationFrame(() => img.classList.add('show')); // style.css: .track-text-img.show { opacity: 0.8; transition: 0.7s; }
+          });
+        }
+
+        // 1) setTrack 랩핑: 기존 동작 유지 + 텍스트만 덧입히기
+        if (orig) {
+          window.setTrack = function (key) {
+            try {
+              orig(key);
+            } catch (e) {
+              /* 원래 로직 오류 나도 텍스트는 바꿔준다 */
+            }
+            swapText(key);
+          };
+        }
+
+        // 2) 혹시 setTrack이 끝내 없거나 막혀도 대비: 버튼 클릭 직접 후킹
+        const group = document.querySelector('.track-controls');
+        if (group) {
+          group.addEventListener(
+            'click',
+            (e) => {
+              const btn = e.target.closest('.track-btn');
+              if (!btn) return;
+              // onclick="setTrack('leisure')"에서 키 뽑기
+              const onclk = btn.getAttribute('onclick') || '';
+              const m = onclk.match(/setTrack\('([^']+)'\)/);
+              const key = m ? m[1] : null;
+              if (key) {
+                // 원래 setTrack이 있으면 이미 호출될 것이고, 위 랩핑으로 swapText 됨.
+                // 없더라도 여기서 최소한 텍스트는 바꿔준다.
+                if (!orig) swapText(key);
+              }
+            },
+            true
+          );
+        }
+
+        // 3) exit 시 기본 상태 복원(있으면): 텍스트 숨김
+        if (typeof window.exitInside === 'function') {
+          const _exit = window.exitInside.bind(window);
+          window.exitInside = function () {
+            try {
+              _exit();
+            } catch (e) {}
+            if (img) img.classList.remove('show'); // 기본 화면으로 복귀 시 숨김 유지
+          };
+        }
+      });
+    </script>
+    <script>
+      (function emergencySmoothAllTracks() {
+        // 기본 화면 숨김
+        const img = document.getElementById('track-text-img');
+        if (img) {
+          img.style.display = 'none';
+          img.style.opacity = '0';
+          img.removeAttribute('src');
+        }
+
+        // 각 트랙 PNG 경로 (네 파일명 그대로)
+        const TEXT_SRC = {
+          leisure: 'images/text/text_leisure.png',
+          calm: 'images/text/text_calm.png',
+          memory: 'images/text/text_memory.png',
+          nature: 'images/text/text_nature.png',
+        };
+
+        // 버튼 클릭 후에 텍스트 스르륵
+        const tracks = document.querySelector('.track-controls');
+        if (tracks) {
+          tracks.addEventListener('click', (e) => {
+            const btn = e.target.closest('.track-btn');
+            if (!btn) return;
+            const m = (btn.getAttribute('onclick') || '').match(
+              /setTrack\('([^']+)'\)/
+            );
+            if (!m) return;
+            const key = m[1];
+            const src = TEXT_SRC[key];
+            if (!src) return;
+
+            // 스르륵 전환
+            const img = document.getElementById('track-text-img');
+            if (!img) return;
+            img.style.transition = 'none';
+            img.style.opacity = '0';
+            img.style.display = 'block';
+
+            // 한 프레임 뒤 src 교체 + 트랜지션 복원 + opacity 업
+            requestAnimationFrame(() => {
+              img.src = src;
+              img.style.transition = 'opacity 2s ease';
+              requestAnimationFrame(() => {
+                img.style.opacity = '0.8';
+              });
+            });
+          });
+        }
+
+        // exit 시 다시 숨기기
+        if (typeof window.exitInside === 'function') {
+          const orig = window.exitInside.bind(window);
+          window.exitInside = function () {
+            try {
+              orig();
+            } catch (e) {}
+            if (img) {
+              img.style.opacity = '0';
+              img.style.display = 'none';
+              img.removeAttribute('src');
+            }
+          };
+        }
+      })();
+    </script>
   </body>
 </html>

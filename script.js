@@ -60,35 +60,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!inside || !panel || !lp || !needle || buttons.length === 0) return;
 
-    // 트랙 메타 — 파일명은 네가 준비한 것으로 그대로 바꿔도 됨
-    const TRACKS = {
-      default: {
-        panelBg: 'images/bg_default.jpg',
-        lpImg: 'images/lp_default.png',
-        deg: 9,
-      },
-      leisure: {
-        panelBg: 'images/bg_leisure.jpg',
-        lpImg: 'images/lp_leisure.png',
-        deg: 38,
-      },
-      calm: {
-        panelBg: 'images/bg_calm.jpg',
-        lpImg: 'images/lp_calm.png',
-        deg: 38,
-      },
-      memory: {
-        panelBg: 'images/bg_memory.jpg',
-        lpImg: 'images/lp_memory.png',
-        deg: 38,
-      },
-      nature: {
-        panelBg: 'images/bg_nature.jpg',
-        lpImg: 'images/lp_nature.png',
-        deg: 42,
-      },
-    };
-
     // 초기 상태(기본 화면)
     function applyTrack(meta) {
       panel.style.backgroundImage = `url('${meta.panelBg}')`;
@@ -145,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
       deg: 11,
       audio: 'audio/leisure.mp3',
       textImg: 'images/text/text_leisure.png',
+      fx: 'fx-leisure',
     },
     calm: {
       panelBg: 'images/bg_calm.jpg',
@@ -152,6 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
       deg: 16,
       audio: 'audio/calm.mp3',
       textImg: 'images/text/text_calm.png',
+      fx: 'fx-calm',
     },
     memory: {
       panelBg: 'images/bg_memory.jpg',
@@ -159,6 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
       deg: 21,
       audio: 'audio/memory.mp3',
       textImg: 'images/text/text_memory.png',
+      fx: 'fx-memory',
     },
     nature: {
       panelBg: 'images/bg_nature.jpg',
@@ -166,22 +140,16 @@ document.addEventListener('DOMContentLoaded', () => {
       deg: 25,
       audio: 'audio/nature.mp3',
       textImg: 'images/text/text_nature.png',
+      fx: 'fx-nature',
     },
   };
 
-  // ===== 트랙 텍스트!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! PNG 전환 =====
+  // [FIX] 초기 텍스트 PNG 세팅: 로드 시엔 key가 없으므로 'default'로 안전하게
   const textImgEl = document.getElementById('track-text-img');
-  if (textImgEl) {
-    textImgEl.classList.remove('show'); // 먼저 숨김
-    textImgEl.style.opacity = 0;
-
-    // 새 이미지 설정
-    textImgEl.src = TRACKS[key].textImg;
-
-    // 1.5초 후 서서히 나타남
-    setTimeout(() => {
-      textImgEl.classList.add('show');
-    }, 1500);
+  if (textImgEl && TRACKS.default && TRACKS.default.textImg) {
+    textImgEl.src = TRACKS.default.textImg;
+    // 네가 쓰던 페이드인 흐름 유지하고 싶으면 이 한 줄만 남겨도 됨
+    textImgEl.classList.add('show');
   }
 
   const _player = new Audio();
