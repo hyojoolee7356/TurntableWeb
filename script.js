@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     calm: {
       panelBg: 'images/bg_calm.jpg',
       lpImg: 'images/lp_calm.png',
-      deg: 16,
+      deg: 15,
       audio: 'audio/calm.mp3',
       textImg: 'images/text/text_calm.png',
       fx: 'fx-calm',
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
     memory: {
       panelBg: 'images/bg_memory.jpg',
       lpImg: 'images/lp_memory.png',
-      deg: 21,
+      deg: 20,
       audio: 'audio/memory.mp3',
       textImg: 'images/text/text_memory.png',
       fx: 'fx-memory',
@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     nature: {
       panelBg: 'images/bg_nature.jpg',
       lpImg: 'images/lp_nature.png',
-      deg: 25,
+      deg: 24,
       audio: 'audio/nature.mp3',
       textImg: 'images/text/text_nature.png',
       fx: 'fx-nature',

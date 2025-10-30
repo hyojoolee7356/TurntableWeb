@@ -334,7 +334,7 @@ body {
   position: absolute;
   width: 53%; /* 트랙들과 동일한 비율 유지 */
   left: 8%; /* 패널 기준 왼쪽 정렬 */
-  top: 4%; /* 위쪽 위치 맞추기 */
+  top: 5%; /* 위쪽 위치 맞추기 */
   transform: none;
 }
 /* ===== 트랙 텍스트 (PNG) ===== */
